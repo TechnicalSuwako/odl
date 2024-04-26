@@ -73,7 +73,7 @@ release-linux:
 
 dist:
 	mkdir -p ${NAME}-${VERSION} release/src
-	cp -R LICENSE.txt Makefile README.md CHANGELOG.md \
+	cp -R LICENSE.txt Makefile README.md CHANGELOG.md ${NAME}.1 \
 		*.c ${NAME}-${VERSION}
 	tar zcfv ${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
 	mv ${NAME}-${VERSION}.tar.gz release/src
@@ -82,9 +82,11 @@ dist:
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
+	sed "s/VERSION/${VERSION}/g" < ${NAME}.1 > ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	chmod 755 ${DESTDIR}${PREFIX}/bin/${NAME}
 
 uninstall:
+	rm -f ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	rm -f ${DESTDIR}${PREFIX}/bin/${NAME}
 
 .PHONY: all clean install uninstall
