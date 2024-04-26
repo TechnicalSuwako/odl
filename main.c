@@ -8,11 +8,13 @@
 
 const char* sofname = "odl";
 const char* version = "0.2.0";
+const char* avalopt = "opv";
 char* filename;
 
 int opt;
 int output_flag = 0;
 int version_flag = 0;
+int already_flag = 0;
 int err_flag = 0;
 
 char* get_filename(const char* url) {
@@ -98,17 +100,24 @@ void flags(int opt, int argc, char* argv[]) {
     case 'o':
       handle_o(argc, argv);
       break;
+    case 'p':
+      already_flag = 1;
+      break;
     case 'v':
       version_flag = 1;
       break;
     default:
       err_flag = 1;
-      printf("usage: %s-%s [-ov] [url ...]\n", sofname, version);
+      printf("usage: %s-%s [-%s] [url ...]\n", sofname, version, avalopt);
       break;
   }
 }
 
 int downloader(CURL* curl, char* filename, const char* url) {
+  if (already_flag == 1 && access(filename, F_OK) != -1) {
+    printf("ファイルが既に存在しますので、ダウンロードしません。\n");
+    return 1;
+  }
   curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
@@ -137,11 +146,11 @@ int downloader(CURL* curl, char* filename, const char* url) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    printf("usage: %s-%s [-ov] [url ...]\n", sofname, version);
+    printf("usage: %s-%s [-%s] [url ...]\n", sofname, version, avalopt);
     return 1;
   }
 
-  while ((opt = getopt(argc, argv, "ov")) != -1) {
+  while ((opt = getopt(argc, argv, avalopt)) != -1) {
     flags(opt, argc, argv);
   }
 

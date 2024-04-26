@@ -3,14 +3,17 @@
 odl - onrain downloader
 .SH SYNOPSIS
 .B odl
-[-v] [-o \fI\,name\fR \fI\,file\fR] [\fI\,file\fR \fI\,...\fR]
+[-v] [-o \fI\,name\fR \fI\,file\fR] [-p] \fI\,file\fR [\fI\,...\fR]
 .SH DESCRIPTION
 .PP
 ネットから簡単にファイルをダウンロード出来るツールです。
 .TP
--\fB\o\fR \fI\,name\fR \fI\,file\fR
+-\fB\,o\fR \fI\,name\fR \fI\,file\fR
 ファイル名を付いてダウンロードします。
 それで1回1つのファイルのみダウンロード可能です。
+.TP
+-\fB\,p\fR \fI\,file\fR \fI\,...\fR
+ファイルは既に存在する場合、ダウンロードしない様にします。
 .TP
 -\fB\,v\fR
 バージョンを表示
