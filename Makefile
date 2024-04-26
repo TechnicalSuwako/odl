@@ -33,6 +33,13 @@ all:
 clean:
 	rm -f ${NAME}
 
+release-openbsd-i386:
+	mkdir -p release/bin
+	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-openbsd-i386 ${FILES} ${LDFLAGS} \
+		-static -lcurl -lc -lnghttp3 -lngtcp2_crypto_quictls -lngtcp2 -lssl \
+		-lcrypto -lnghttp2 -lz -lpthread
+	strip release/bin/${NAME}-${VERSION}-openbsd-i386
+
 release-openbsd:
 	mkdir -p release/bin
 	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-openbsd-amd64 ${FILES} ${LDFLAGS} \
