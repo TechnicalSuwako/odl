@@ -135,6 +135,15 @@ int downloader(CURL* curl, char* filename, const char* url) {
     CURLOPT_USERAGENT,
     "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
   );
+  // Pixivも結構面倒くさい
+  if (
+      strstr("s.pixiv.net", url) == 0 ||
+      strstr("i.pixiv.net", url) == 0 ||
+      strstr("s.pximg.net", url) == 0 ||
+      strstr("i.pximg.net", url) == 0
+  ) {
+    curl_easy_setopt(curl, CURLOPT_REFERER, "https://www.pixiv.net/");
+  }
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
   CURLcode res = curl_easy_perform(curl);
   fclose(file);
