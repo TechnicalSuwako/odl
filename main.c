@@ -7,7 +7,7 @@
 #include <curl/curl.h>
 
 const char* sofname = "odl";
-const char* version = "0.2.0";
+const char* version = "0.3.0";
 const char* avalopt = "opv";
 char* filename;
 
@@ -129,6 +129,12 @@ int downloader(CURL* curl, char* filename, const char* url) {
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, url);
+  // Clownflareは面倒くさいわね・・・
+  curl_easy_setopt(
+    curl,
+    CURLOPT_USERAGENT,
+    "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
+  );
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
   CURLcode res = curl_easy_perform(curl);
   fclose(file);
