@@ -12,14 +12,12 @@ LDFLAGS=-L/usr/lib -L/usr/local/lib
 
 .if ${UNAME_S} == "FreeBSD"
 MANPREFIX=${PREFIX}/share/man
-.elif ${UNAME_S} == "OpenBSD"
 .elif ${UNAME_S} == "Linux"
 PREFIX=/usr
 MANPREFIX=${PREFIX}/share/man
 .elif ${UNAME_S} == "NetBSD"
-PREFIX=/usr/pkg
-CFLAGS+= -I/usr/pkg/include
-LDFLAGS+= -L/usr/pkg/lib
+CFLAGS+=-I/usr/pkg/include
+LDFLAGS+=-L/usr/pkg/lib
 MANPREFIX=${PREFIX}/share/man
 .endif
 
