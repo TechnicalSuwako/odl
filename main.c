@@ -118,17 +118,9 @@ int downloader(CURL* curl, char* filename, const char* url) {
     printf("ファイルが既に存在しますので、ダウンロードしません。\n");
     return 1;
   }
-  curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
-  curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-
-  FILE* file = fopen(filename, "wb");
-  if (!file) {
-    perror("ファイルを開けません。");
-    curl_easy_cleanup(curl);
-    return -1;
-  }
 
   curl_easy_setopt(curl, CURLOPT_URL, url);
+
   // Clownflareは面倒くさいわね・・・
   curl_easy_setopt(
     curl,
@@ -144,12 +136,34 @@ int downloader(CURL* curl, char* filename, const char* url) {
   ) {
     curl_easy_setopt(curl, CURLOPT_REFERER, "https://www.pixiv.net/");
   }
+
+  curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
+  curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+
+  FILE* file = fopen(filename, "wb");
+  if (!file) {
+    perror("ファイルを開けません。");
+    curl_easy_cleanup(curl);
+    return -1;
+  }
+
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+  long httpcode = 0;
   CURLcode res = curl_easy_perform(curl);
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpcode);
+
   fclose(file);
 
   if (res != CURLE_OK) {
+    unlink(filename);
     fprintf(stderr, "\nダウンロードに失敗： %s\n", curl_easy_strerror(res));
+    curl_easy_cleanup(curl);
+    return -1;
+  }
+
+  if (res == CURLE_ABORTED_BY_CALLBACK || httpcode != 200) {
+    unlink(filename);
+    fprintf(stderr, "\nダウンロードに失敗： HTTP CODE: %ld\n", httpcode);
     curl_easy_cleanup(curl);
     return -1;
   }
