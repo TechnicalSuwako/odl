@@ -8,10 +8,11 @@
 
 const char* sofname = "odl";
 const char* version = "0.3.0";
-const char* avalopt = "opv";
+const char* avalopt = "nopv";
 char* filename;
 
 int opt;
+int yokou_flag = 0;
 int output_flag = 0;
 int version_flag = 0;
 int already_flag = 0;
@@ -97,8 +98,20 @@ void handle_o(int argc, char* argv[]) {
   }
 }
 
+void dlsucmsg() {
+  if (yokou_flag == 0) printf("\nダウンロードに完了しました。\n");
+  else {
+    printf("\nダウンロードに完了しました。\n");
+    printf("予行演習モードですので、ファイルを保存していません。\n");
+    printf("保存するには、「-n」フラグを消して下さい。\n");
+  }
+}
+
 void flags(int opt, int argc, char* argv[]) {
   switch (opt) {
+    case 'n':
+      yokou_flag = 1;
+      break;
     case 'o':
       handle_o(argc, argv);
       break;
@@ -142,7 +155,14 @@ int downloader(CURL* curl, char* filename, const char* url) {
   curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
-  FILE* file = fopen(filename, "wb");
+  FILE* file = NULL;
+
+  if (yokou_flag == 0) {
+    file = fopen(filename, "wb");
+  } else {
+    file = fopen("/tmp/odl_test", "wb");
+  }
+
   if (!file) {
     perror("ファイルを開けません。");
     curl_easy_cleanup(curl);
@@ -150,20 +170,22 @@ int downloader(CURL* curl, char* filename, const char* url) {
   }
 
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+
   long httpcode = 0;
   CURLcode res = curl_easy_perform(curl);
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpcode);
 
   fclose(file);
+  if (yokou_flag == 1) unlink("/tmp/odl_test");
 
   if (res != CURLE_OK) {
-    unlink(filename);
+    if (yokou_flag == 0) unlink(filename);
     fprintf(stderr, "\nダウンロードに失敗： %s\n", curl_easy_strerror(res));
     return -1;
   }
 
   if (res == CURLE_ABORTED_BY_CALLBACK || httpcode != 200) {
-    unlink(filename);
+    if (yokou_flag == 0) unlink(filename);
     fprintf(stderr, "\n%sをダウンロードに失敗： HTTP CODE: %ld\n", filename, httpcode);
     return -1;
   }
@@ -216,8 +238,9 @@ int main(int argc, char* argv[]) {
     if (dlstat == 0) onedlsuc = 1;
 
     curl_easy_cleanup(curl);
+
     if (onedlsuc == 1) {
-      printf("\nダウンロードに完了しました。\n");
+      dlsucmsg();
       return 0;
     }
 
@@ -239,7 +262,7 @@ int main(int argc, char* argv[]) {
 
   curl_easy_cleanup(curl);
   if (onedlsuc == 1) {
-    printf("\nダウンロードに完了しました。\n");
+    dlsucmsg();
     return 0;
   }
 
