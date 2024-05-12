@@ -16,6 +16,8 @@ int output_flag = 0;
 int version_flag = 0;
 int already_flag = 0;
 int err_flag = 0;
+int dlstat = 0;
+int onedlsuc = 0;
 
 char* get_filename(const char* url) {
   char* fn_start = strrchr(url, '/');
@@ -157,14 +159,12 @@ int downloader(CURL* curl, char* filename, const char* url) {
   if (res != CURLE_OK) {
     unlink(filename);
     fprintf(stderr, "\nダウンロードに失敗： %s\n", curl_easy_strerror(res));
-    curl_easy_cleanup(curl);
     return -1;
   }
 
   if (res == CURLE_ABORTED_BY_CALLBACK || httpcode != 200) {
     unlink(filename);
-    fprintf(stderr, "\nダウンロードに失敗： HTTP CODE: %ld\n", httpcode);
-    curl_easy_cleanup(curl);
+    fprintf(stderr, "\n%sをダウンロードに失敗： HTTP CODE: %ld\n", filename, httpcode);
     return -1;
   }
 
@@ -212,12 +212,16 @@ int main(int argc, char* argv[]) {
 
     filename = argv[optind];
     const char* url = argv[optind+1];
-    downloader(curl, filename, url);
+    dlstat = downloader(curl, filename, url);
+    if (dlstat == 0) onedlsuc = 1;
 
     curl_easy_cleanup(curl);
-    printf("\nダウンロードに完了しました。\n");
+    if (onedlsuc == 1) {
+      printf("\nダウンロードに完了しました。\n");
+      return 0;
+    }
 
-    return 0;
+    return 1;
   }
 
   // 複数ファイル名可能
@@ -229,11 +233,15 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    downloader(curl, filename, url);
+    dlstat = downloader(curl, filename, url);
+    if (dlstat == 0) onedlsuc = 1;
   }
 
   curl_easy_cleanup(curl);
-  printf("\nダウンロードに完了しました。\n");
+  if (onedlsuc == 1) {
+    printf("\nダウンロードに完了しました。\n");
+    return 0;
+  }
 
-  return 0;
+  return 1;
 }
