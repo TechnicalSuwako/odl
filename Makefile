@@ -53,10 +53,9 @@ release-freebsd:
 	mkdir -p release/bin
 	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-freebsd-${UNAME_M} \
 		${FILES} ${LDFLAGS} \
-		-static -lcurl -lnghttp2 -lssh2 -lpsl -lssl -lheimntlm \
-		-lhx509 -lcom_err -lcrypto -lasn1 -lwind -lheimbase \
-		-lroken -lcrypt -lz -lkrb5 -lgssapi -lgssapi_krb5 -lthr \
-		-lidn2 -lunistring -lprivateheimipcc
+		-static -lcurl -liconv -lc -lnghttp2 -lssh2 -lpsl -lssl -lheimntlm -lhx509 \
+		-lcom_err -lcrypto -lasn1 -lwind -lheimbase -lroken -lcrypt -lz -lkrb5 -lgssapi \
+		-lgssapi_krb5 -lthr -lidn2 -lunistring -lprivateheimipcc
 	strip release/bin/${NAME}-${VERSION}-freebsd-${UNAME_M}
 
 release-linux:
