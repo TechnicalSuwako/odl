@@ -107,6 +107,10 @@ void dlsucmsg() {
   }
 }
 
+void usage() {
+  printf("%s-%s\nusage: %s [-%s] [url ...]\n", sofname, version, sofname, avalopt);
+}
+
 void flags(int opt, int argc, char* argv[]) {
   switch (opt) {
     case 'n':
@@ -123,7 +127,7 @@ void flags(int opt, int argc, char* argv[]) {
       break;
     default:
       err_flag = 1;
-      printf("usage: %s-%s [-%s] [url ...]\n", sofname, version, avalopt);
+      usage();
       break;
   }
 }
@@ -197,7 +201,7 @@ int downloader(CURL* curl, char* filename, const char* url) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    printf("usage: %s-%s [-%s] [url ...]\n", sofname, version, avalopt);
+    usage();
     return 1;
   }
 
