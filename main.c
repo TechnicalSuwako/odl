@@ -63,8 +63,6 @@ int progress_callback(void *cp, double dt, double dn, double ut, double un) {
   (void)un;
 
   double progress = (dn / dt) * 100.0;
-  char* status = "ダウンロード中";
-  if (progress == 100.0) status = "ダウンロード済み";
 
   printf("\r[");
   int barw = 50;
@@ -76,7 +74,7 @@ int progress_callback(void *cp, double dt, double dn, double ut, double un) {
     else printf(" ");
   }
 
-  printf("] %.2f%% %s, %s", progress, filename, status);
+  printf("] %.2f%% %s", progress, filename);
   fflush(stdout);
 
   return 0;
