@@ -7,7 +7,7 @@
 #include <curl/curl.h>
 
 const char* sofname = "odl";
-const char* version = "0.3.0";
+const char* version = "0.3.1";
 const char* avalopt = "nopv";
 char* filename;
 

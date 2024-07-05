@@ -35,3 +35,25 @@ doas prt-get depinst curl bmake
 bmake
 doas bmake install
 ```
+
+### Minix
+```sh
+su
+pkgin install curl clang bmake
+bmake
+bmake install
+```
+
+### Haiku
+```sh
+pkgman install curl curl_devel bmake
+bmake
+bmake install
+```
+
+### macOS
+```sh
+brew install curl bmake
+bmake
+doas bmake install
+```

@@ -1,29 +1,46 @@
 UNAME_S!=uname -s
 UNAME_M!=uname -m
 
-NAME!=cat main.c | grep "const char\* sofname" | awk '{print $$5}' | \
+NAME != cat main.c | grep "const char\* sofname" | awk '{print $$5}' | \
 	sed "s/\"//g" | sed "s/;//"
-VERSION!=cat main.c | grep "const char\* version" | awk '{print $$5}' | \
+VERSION != cat main.c | grep "const char\* version" | awk '{print $$5}' | \
 	sed "s/\"//g" | sed "s/;//"
-PREFIX=/usr/local
-MANPREFIX=${PREFIX}/man
-CFLAGS=-Wall -Wextra -g -I/usr/include -I/usr/local/include
-LDFLAGS=-L/usr/lib -L/usr/local/lib
-
-.if ${UNAME_S} == "FreeBSD"
-MANPREFIX=${PREFIX}/share/man
-.elif ${UNAME_S} == "Linux"
-PREFIX=/usr
-MANPREFIX=${PREFIX}/share/man
-.elif ${UNAME_S} == "NetBSD"
-CFLAGS+=-I/usr/pkg/include
-LDFLAGS+=-L/usr/pkg/lib
-MANPREFIX=${PREFIX}/share/man
+PREFIX = /usr/local
+.if ${UNAME_S} == "Linux"
+PREFIX = /usr
+.elif ${UNAME_S} == "Haiku"
+PREFIX = /boot/home/config/non-packaged
+.elif ${UNAME_S} == "Darwin"
 .endif
 
-CC=cc
-FILES=main.c
-LIBS=-lcurl
+MANPREFIX = ${PREFIX}/share/man
+.if ${UNAME_S} == "OpenBSD"
+MANPREFIX = ${PREFIX}/man
+.elif ${UNAME_S} == "Haiku"
+MANPREFIX = ${PREFIX}/documentation/man
+.endif
+
+CFLAGS = -Wall -Wextra -g -I/usr/include -I/usr/local/include
+LDFLAGS = -L/usr/lib -L/usr/local/lib
+
+.if ${UNAME_S} == "NetBSD" || ${UNAME_S} == "Minix"
+CFLAGS += -I/usr/pkg/include
+LDFLAGS += -L/usr/pkg/lib
+.elif ${UNAME_S} == "Haiku"
+CFLAGS += -I/boot/system/develop/headers
+LDFLAGS += -L/boot/system/develop/lib
+.elif ${UNAME_S} == "Darwin"
+CFLAGS += -I/opt/local/include
+LDFLAGS += -L/opt/local/lib
+.endif
+
+CC = cc
+.if ${UNAME_S} == "Minix"
+CC = clang
+.endif
+
+FILES = main.c
+LIBS = -lcurl
 
 all:
 	${CC} ${CFLAGS} -o ${NAME} ${FILES} ${LDFLAGS} ${LIBS}
@@ -68,11 +85,14 @@ release-linux:
 
 dist:
 	mkdir -p ${NAME}-${VERSION} release/src
-	cp -R LICENSE.txt Makefile README.md CHANGELOG.md ${NAME}.1 \
-		*.c ${NAME}-${VERSION}
-	tar zcfv ${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
-	mv ${NAME}-${VERSION}.tar.gz release/src
+	cp -R LICENSE.txt Makefile README.md CHANGELOG.md\
+		${NAME}.1 ${FILES} ${NAME}-${VERSION}
+	tar zcfv release/src/${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
 	rm -rf ${NAME}-${VERSION}
+
+man:
+	mkdir -p release/man
+	cp ${NAME}.1 release/man/${NAME}-${VERSION}.1
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
@@ -84,4 +104,7 @@ uninstall:
 	rm -f ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	rm -f ${DESTDIR}${PREFIX}/bin/${NAME}
 
-.PHONY: all clean install uninstall
+.PHONY: all clean\
+	release-openbsd release-linux release-freebsd release-netbsd\
+	dist man\
+	install uninstall
