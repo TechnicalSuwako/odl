@@ -90,7 +90,7 @@ man:
 release:
 	mkdir -p release/bin/${VERSION}/${OS}/${UNAME_M}
 	${CC} ${CFLAGS} -o release/bin/${VERSION}/${OS}/${UNAME_M}/${NAME}\
-		${FILES} ${STATIC}
+		${FILES} ${LDFLAGS} ${STATIC}
 	strip release/bin/${VERSION}/${OS}/${UNAME_M}/${NAME}
 
 install:
