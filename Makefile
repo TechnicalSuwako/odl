@@ -1,5 +1,16 @@
-UNAME_S!=uname -s
-UNAME_M!=uname -m
+UNAME_S != uname -s
+UNAME_M != uname -m
+OS = ${UNAME_S}
+
+.if ${UNAME_S} == "OpenBSD"
+OS = openbsd
+.elif ${UNAME_S} == "NetBSD"
+OS = netbsd
+.elif ${UNAME_S} == "FreeBSD"
+OS = freebsd
+.elif ${UNAME_S} == "Linux"
+OS = linux
+.endif
 
 NAME != cat main.c | grep "const char\* sofname" | awk '{print $$5}' | \
 	sed "s/\"//g" | sed "s/;//"
@@ -42,46 +53,28 @@ CC = clang
 FILES = main.c
 LIBS = -lcurl
 
+STATIC = -static ${LIBS}
+.if ${UNAME_S} == "OpenBSD"
+STATIC += -lc -lnghttp3 -lngtcp2_crypto_quictls -lngtcp2 -lssl -lcrypto -lnghttp2\
+					-lz -lpthread
+.elif ${UNAME_S} == "FreeBSD"
+STATIC += -liconv -lc -lnghttp2 -lssh2 -lpsl -lssl -lheimntlm -lhx509 -lcom_err\
+					-lcrypto -lasn1 -lwind -lheimbase -lroken -lcrypt -lz -lkrb5 -lgssapi\
+					-lgssapi_krb5 -lthr -lidn2 -lunistring -lprivateheimipcc
+.elif ${UNAME_S} == "NetBSD"
+STATIC += -lnghttp2 -lc -lidn2 -lunistring -lgssapi -lkrb5 -lhx509 -lintl -lssl\
+					-lcrypto -lcrypt -lasn1 -lcom_err -lroken -lutil -lwind -lheimbase\
+					-lheimntlm -lz -lpthread
+.elif ${UNAME_S} == "Linux"
+STATIC += -lc -lnghttp2 -lidn2 -lssh2 -lpsl -lssl -lcrypto -lzstd -lz -lunistring
+.endif
+
 all:
 	${CC} ${CFLAGS} -o ${NAME} ${FILES} ${LDFLAGS} ${LIBS}
 	strip ${NAME}
 
 clean:
 	rm -f ${NAME}
-
-release-openbsd:
-	mkdir -p release/bin
-	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M} \
-		${FILES} ${LDFLAGS} \
-		-static -lcurl -lc -lnghttp3 -lngtcp2_crypto_quictls -lngtcp2 -lssl \
-		-lcrypto -lnghttp2 -lz -lpthread
-	strip release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M}
-
-release-netbsd:
-	mkdir -p release/bin
-	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-netbsd-${UNAME_M} \
-		${FILES} ${LDFLAGS} \
-		-static -lcurl -lnghttp2 -lc -lidn2 -lunistring -lgssapi -lkrb5 -lhx509 -lintl \
-		-lssl -lcrypto -lcrypt -lasn1 -lcom_err -lroken -lutil -lwind -lheimbase \
-		-lheimntlm -lz -lpthread
-	strip release/bin/${NAME}-${VERSION}-netbsd-${UNAME_M}
-
-release-freebsd:
-	mkdir -p release/bin
-	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-freebsd-${UNAME_M} \
-		${FILES} ${LDFLAGS} \
-		-static -lcurl -liconv -lc -lnghttp2 -lssh2 -lpsl -lssl -lheimntlm -lhx509 \
-		-lcom_err -lcrypto -lasn1 -lwind -lheimbase -lroken -lcrypt -lz -lkrb5 -lgssapi \
-		-lgssapi_krb5 -lthr -lidn2 -lunistring -lprivateheimipcc
-	strip release/bin/${NAME}-${VERSION}-freebsd-${UNAME_M}
-
-release-linux:
-	mkdir -p release/bin
-	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-linux-${UNAME_M} \
-		${FILES} ${LDFLAGS} \
-		-static -lcurl -lc -lnghttp2 -lidn2 -lssh2 -lpsl -lssl -lcrypto -lzstd -lz \
-		-lunistring
-	strip release/bin/${NAME}-${VERSION}-linux-${UNAME_M}
 
 dist:
 	mkdir -p ${NAME}-${VERSION} release/src
@@ -91,8 +84,14 @@ dist:
 	rm -rf ${NAME}-${VERSION}
 
 man:
-	mkdir -p release/man
-	cp ${NAME}.1 release/man/${NAME}-${VERSION}.1
+	mkdir -p release/man/${VERSION}
+	sed "s/VERSION/${VERSION}/g" < ${NAME}.1 > release/man/${VERSION}/${NAME}.1
+
+release:
+	mkdir -p release/bin/${VERSION}/${OS}/${UNAME_M}
+	${CC} ${CFLAGS} -o release/bin/${VERSION}/${OS}/${UNAME_M}/${NAME}\
+		${FILES} ${STATIC}
+	strip release/bin/${VERSION}/${OS}/${UNAME_M}/${NAME}
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
@@ -104,7 +103,4 @@ uninstall:
 	rm -f ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	rm -f ${DESTDIR}${PREFIX}/bin/${NAME}
 
-.PHONY: all clean\
-	release-openbsd release-linux release-freebsd release-netbsd\
-	dist man\
-	install uninstall
+.PHONY: all clean dist man release install uninstall
