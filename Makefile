@@ -94,7 +94,7 @@ release:
 	strip release/bin/${VERSION}/${OS}/${UNAME_M}/${NAME}
 
 install:
-	mkdir -p ${DESTDIR}${PREFIX}/bin
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDOR}${MANPREFIX}/man1
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
 	sed "s/VERSION/${VERSION}/g" < ${NAME}.1 > ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	chmod 755 ${DESTDIR}${PREFIX}/bin/${NAME}
